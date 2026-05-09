@@ -106,7 +106,10 @@
     `;
   }
 
-  function nav({ open = false } = {}) {
+  function nav({ open = false, activeSection = "content-1" } = {}) {
+    const navClass = (section) => `nav-item ${activeSection === section ? "is-active" : ""}`.trim();
+    const currentAttr = (section) => (activeSection === section ? 'aria-current="page"' : "");
+
     return `
       <nav class="ps-nav ${open ? "is-open" : ""}" aria-label="주요 메뉴">
         <div class="nav-bar">
@@ -118,15 +121,15 @@
           </button>
         </div>
         <div class="nav-panel" aria-hidden="${open ? "false" : "true"}" ${open ? "" : "inert"}>
-          <button class="nav-item is-active" type="button" data-scroll-target="content-1">
+          <button class="${navClass("content-1")}" type="button" data-scroll-target="content-1" ${currentAttr("content-1")}>
             <img class="nav-icon" src="${assets.icons.home}" alt="" />
             홈
           </button>
-          <button class="nav-item" type="button" data-scroll-target="content-2">
+          <button class="${navClass("content-2")}" type="button" data-scroll-target="content-2" ${currentAttr("content-2")}>
             <img class="nav-icon" src="${assets.icons.food}" alt="" />
             팹시스트릿 매장 리스트
           </button>
-          <button class="nav-item" type="button" data-scroll-target="content-3">
+          <button class="${navClass("content-3")}" type="button" data-scroll-target="content-3" ${currentAttr("content-3")}>
             <img class="nav-icon" src="${assets.icons.map}" alt="" />
             팹시스트릿 지도
           </button>

@@ -5,6 +5,7 @@
 
   let mode = "category";
   let activeFilter = "전체";
+  let activeSection = "content-1";
   let menuOpen = false;
   let sectionObserver = null;
   let maxScrollDepth = 0;
@@ -37,7 +38,7 @@
     app.innerHTML = `
       ${components.intro()}
       <div class="main-stage">
-        ${components.nav({ open: menuOpen })}
+        ${components.nav({ open: menuOpen, activeSection })}
         <div class="main-scroll" data-main-scroll>
           <section id="content-1" class="content-section content-1">
             <div class="hero-copy">
@@ -128,6 +129,7 @@
       button.addEventListener("click", () => {
         menuOpen = false;
         setMenuOpen(false);
+        setActiveSection(button.dataset.scrollTarget);
         window.PepsiAnalytics?.track("nav_click", { target: button.dataset.scrollTarget });
         scrollToSection(button.dataset.scrollTarget);
       });
@@ -225,6 +227,18 @@
     button?.setAttribute("aria-expanded", String(open));
   }
 
+  function setActiveSection(sectionId) {
+    if (!sectionId || activeSection === sectionId) return false;
+    activeSection = sectionId;
+    app.querySelectorAll(".nav-item[data-scroll-target]").forEach((button) => {
+      const active = button.dataset.scrollTarget === sectionId;
+      button.classList.toggle("is-active", active);
+      if (active) button.setAttribute("aria-current", "page");
+      else button.removeAttribute("aria-current");
+    });
+    return true;
+  }
+
   function updateStoreArea({ keepListScroll = true } = {}) {
     const stores = approvedStores();
     const filters = filterItems(stores);
@@ -265,13 +279,15 @@
     sectionObserver?.disconnect();
     sectionObserver = new IntersectionObserver(
       (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            window.PepsiAnalytics?.track("section_view", { section: entry.target.id });
-          }
-        });
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (!visible) return;
+        if (setActiveSection(visible.target.id)) {
+          window.PepsiAnalytics?.track("section_view", { section: visible.target.id });
+        }
       },
-      { root: scroller, threshold: 0.6 },
+      { root: scroller, threshold: [0.35, 0.55, 0.7] },
     );
     app.querySelectorAll(".content-section").forEach((section) => sectionObserver.observe(section));
   }
