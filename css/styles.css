@@ -264,7 +264,7 @@ body[data-page="main"] {
   position: sticky;
   top: 0;
   z-index: 3;
-  background: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.88) 78%, rgba(0, 0, 0, 0) 100%);
+  background: transparent;
   padding-bottom: 8px;
 }
 
