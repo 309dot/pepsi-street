@@ -68,18 +68,31 @@ body[data-page="main"] {
   content: "";
 }
 
-.content-1::before,
+.main-scroll::before,
 .modal-screen::after {
   position: absolute;
-  inset: -72px -64px;
-  z-index: -2;
+  top: -72px;
+  right: 0;
+  left: 0;
+  height: 360svh;
   background:
-    radial-gradient(243px 243px at 112px 116px, rgba(0, 37, 255, 0.7), rgba(0, 37, 255, 0.26) 48%, transparent 73%),
-    radial-gradient(243px 243px at 318px 990px, rgba(0, 37, 255, 0.72), rgba(0, 37, 255, 0.3) 45%, transparent 73%),
-    radial-gradient(180px 180px at 245px 780px, rgba(0, 37, 255, 0.4), transparent 78%);
+    radial-gradient(260px 260px at 72px 138px, rgba(0, 37, 255, 0.82), rgba(0, 37, 255, 0.34) 45%, transparent 73%),
+    radial-gradient(230px 230px at 338px 680px, rgba(0, 37, 255, 0.55), rgba(0, 37, 255, 0.22) 48%, transparent 74%),
+    radial-gradient(276px 276px at 306px 1048px, rgba(0, 37, 255, 0.78), rgba(0, 37, 255, 0.3) 46%, transparent 74%),
+    radial-gradient(230px 230px at 64px 1480px, rgba(0, 37, 255, 0.56), rgba(0, 37, 255, 0.2) 50%, transparent 76%),
+    radial-gradient(300px 300px at 318px 1930px, rgba(0, 37, 255, 0.72), rgba(0, 37, 255, 0.28) 46%, transparent 76%),
+    radial-gradient(240px 240px at 92px 2440px, rgba(0, 37, 255, 0.5), rgba(0, 37, 255, 0.2) 52%, transparent 78%);
   content: "";
-  filter: blur(32px);
+  filter: blur(34px);
   pointer-events: none;
+}
+
+.main-scroll::before {
+  z-index: 0;
+}
+
+.modal-screen::after {
+  z-index: -2;
 }
 
 .main-stage {
@@ -89,6 +102,8 @@ body[data-page="main"] {
 }
 
 .main-scroll {
+  position: relative;
+  isolation: isolate;
   height: 100%;
   overflow-x: hidden;
   overflow-y: auto;
@@ -105,6 +120,7 @@ body[data-page="main"] {
 
 .content-section {
   position: relative;
+  z-index: 1;
   width: 100%;
   min-height: 100svh;
   scroll-snap-align: start;
@@ -116,9 +132,7 @@ body[data-page="main"] {
   flex-direction: column;
   justify-content: center;
   gap: 80px;
-  overflow: hidden;
   padding: 112px 24px 88px;
-  isolation: isolate;
 }
 
 .hero-copy {
