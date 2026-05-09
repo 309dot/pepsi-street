@@ -37,6 +37,47 @@
     ],
   };
 
+  const categoryImoji = {
+    "일식당": "assets/figma/imoji/japanese-restaurant.png",
+    "태국음식": "assets/figma/imoji/thai.png",
+    "햄버거": "assets/figma/imoji/hamburger.png",
+    "한식": "assets/figma/imoji/korean.png",
+    "핫도그": "assets/figma/imoji/hotdog.png",
+    "일식": "assets/figma/imoji/japanese.png",
+    "샌드위치": "assets/figma/imoji/sandwich.png",
+    "중식": "assets/figma/imoji/chinese.png",
+    "양식": "assets/figma/imoji/western.png",
+    "아시아 음식": "assets/figma/imoji/asia-food.png",
+    "멕시코, 남미음식": "assets/figma/imoji/mexico-south-american.png",
+    "돈가스": "assets/figma/imoji/donkatsu.png",
+    "라멘": "assets/figma/imoji/ramen.png",
+    "마라샹궈, 버섯튀김": "assets/figma/imoji/mala-mushroom.png",
+    "중화요리 주점": "assets/figma/imoji/chinese-pub.png",
+    "퓨전 요리": "assets/figma/imoji/fusion.png",
+    "멕시칸 음식": "assets/figma/imoji/mexican-food.png",
+    "치킨버거": "assets/figma/imoji/chicken-burger.png",
+    "수제버거": "assets/figma/imoji/handmade-burger.png",
+    "퓨전 중식": "assets/figma/imoji/fusion-chinese.png",
+    "화덕 피자": "assets/figma/imoji/wood-fired-pizza-spaced.png",
+    "타코, 퀘사디아": "assets/figma/imoji/taco-quesadilla.png",
+    "오리곰탕": "assets/figma/imoji/duck-gomtang.png",
+    "브런치": "assets/figma/imoji/brunch.png",
+    "타코야끼, 야끼소바": "assets/figma/imoji/takoyaki-yakisoba.png",
+    "화덕피자": "assets/figma/imoji/wood-fired-pizza.png",
+    "베트남 음식": "assets/figma/imoji/vietnamese.png",
+    "베트남 음식 (퀴진)": "assets/figma/imoji/vietnamese-cuisine.png",
+    "타코": "assets/figma/imoji/taco.png",
+    "일식 카레": "assets/figma/imoji/japanese-curry.png",
+    "우육당면": "assets/figma/imoji/beef-noodle.png",
+    "커리": "assets/figma/imoji/curry.png",
+    "아시안음식": "assets/figma/imoji/asian-food.png",
+    "부리또보울&부리또": "assets/figma/imoji/burrito-bowl.png",
+    "한식(국밥)": "assets/figma/imoji/korean-soup.png",
+    "스페인 음식": "assets/figma/imoji/spanish.png",
+    "스프커리": "assets/figma/imoji/soup-curry.png",
+    "수제소시지": "assets/figma/imoji/handmade-sausage.png",
+  };
+
   function escapeHtml(value) {
     return String(value ?? "")
       .replaceAll("&", "&amp;")
@@ -117,14 +158,15 @@
     return `
       <div class="ps-tabs" role="tablist" aria-label="상세 분류">
         ${items
-          .map(
-            (item) => `
+          .map((item) => {
+            const imoji = showIcons ? categoryImoji[item] : "";
+            return `
               <button class="${item === active ? "is-active" : ""}" type="button" data-filter="${escapeHtml(item)}">
-                ${showIcons ? `<img src="${item === active ? assets.icons.tabActive : assets.icons.tabMuted}" alt="" />` : ""}
+                ${imoji ? `<img class="tab-imoji" src="${escapeHtml(imoji)}" alt="" />` : ""}
                 ${escapeHtml(item)}
               </button>
-            `,
-          )
+            `;
+          })
           .join("")}
       </div>
     `;

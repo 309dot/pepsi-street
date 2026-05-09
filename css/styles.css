@@ -281,7 +281,6 @@ body[data-page="main"] {
 }
 
 .ps-toggle img,
-.ps-tabs img,
 .nav-icon,
 .input-icon,
 .inline-icon {
@@ -289,6 +288,16 @@ body[data-page="main"] {
   width: 20px;
   height: 20px;
   object-fit: contain;
+}
+
+.ps-tabs img {
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
+.ps-tabs .tab-imoji {
+  width: 28px;
+  height: auto;
 }
 
 .ps-toggle button.is-active {
