@@ -56,7 +56,7 @@
             ${components.floatingFoods()}
             <div class="sticky-filter">
               ${components.toggle({ mode })}
-              ${components.tabs({ items: filters, active: activeFilter })}
+              ${components.tabs({ items: filters, active: activeFilter, showIcons: mode !== "district" })}
             </div>
             <div class="store-scroll" data-store-scroll>
               ${components.storeList(filteredStores())}
@@ -238,7 +238,7 @@
     if (filterRoot) {
       filterRoot.innerHTML = `
         ${components.toggle({ mode })}
-        ${components.tabs({ items: filters, active: activeFilter })}
+        ${components.tabs({ items: filters, active: activeFilter, showIcons: mode !== "district" })}
       `;
     }
     if (listRoot) {

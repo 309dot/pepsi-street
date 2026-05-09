@@ -113,14 +113,14 @@
     `;
   }
 
-  function tabs({ items, active }) {
+  function tabs({ items, active, showIcons = true }) {
     return `
       <div class="ps-tabs" role="tablist" aria-label="상세 분류">
         ${items
           .map(
             (item) => `
               <button class="${item === active ? "is-active" : ""}" type="button" data-filter="${escapeHtml(item)}">
-                <img src="${item === active ? assets.icons.tabActive : assets.icons.tabMuted}" alt="" />
+                ${showIcons ? `<img src="${item === active ? assets.icons.tabActive : assets.icons.tabMuted}" alt="" />` : ""}
                 ${escapeHtml(item)}
               </button>
             `,
