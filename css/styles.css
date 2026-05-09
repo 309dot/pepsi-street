@@ -68,7 +68,7 @@ body[data-page="main"] {
   content: "";
 }
 
-.mobile-shell::after,
+.content-1::before,
 .modal-screen::after {
   position: absolute;
   inset: -72px -64px;
@@ -90,6 +90,7 @@ body[data-page="main"] {
 
 .main-scroll {
   height: 100%;
+  overflow-x: hidden;
   overflow-y: auto;
   scroll-behavior: smooth;
   scroll-snap-type: y mandatory;
@@ -115,7 +116,9 @@ body[data-page="main"] {
   flex-direction: column;
   justify-content: center;
   gap: 80px;
+  overflow: hidden;
   padding: 112px 24px 88px;
+  isolation: isolate;
 }
 
 .hero-copy {

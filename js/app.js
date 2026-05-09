@@ -53,7 +53,6 @@
             ${components.scrollHint()}
           </section>
           <section id="content-2" class="content-section content-2">
-            ${components.floatingFoods()}
             <div class="sticky-filter">
               ${components.toggle({ mode })}
               ${components.tabs({ items: filters, active: activeFilter, showIcons: mode !== "district" })}
