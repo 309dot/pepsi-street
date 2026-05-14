@@ -132,50 +132,60 @@ body[data-page="main"] {
   position: relative;
 }
 
-.hero-copy h1 {
-  position: relative;
-  z-index: 1;
+.hero-text-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   width: 100%;
-  margin: 0 0 12px;
+  margin-bottom: 12px;
+}
+
+.hero-text-grid > * {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.hero-copy h1 {
+  width: 100%;
+  margin: 0;
   color: var(--ps-lime);
-  font-size: clamp(34px, 10vw, 40px);
+  font-size: 40px;
   font-weight: 900;
-  line-height: 1.08;
+  line-height: 1.2;
   line-break: strict;
   word-break: keep-all;
 }
 
 .hero-line {
   display: block;
-  min-height: 1.08em;
 }
 
-.hero-line-connected {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.hero-line-indent {
+  padding-left: 138px;
   white-space: nowrap;
 }
 
-.hero-shape {
-  display: inline-block;
-  flex: 0 0 auto;
+.hero-img {
+  display: block;
+  align-self: start;
+  height: 47px;
   overflow: hidden;
   border-radius: var(--ps-radius-full);
-  vertical-align: -0.12em;
-  background-position: center;
   background-size: cover;
+  background-position: center;
+  pointer-events: none;
+  z-index: 1;
 }
 
-.hero-shape-small {
+.hero-img-a {
+  margin-top: 95px;
   width: 138px;
-  height: 47px;
   background-image: url("../assets/figma/food-hero-a.png");
 }
 
-.hero-shape-wide {
+.hero-img-b {
+  margin-top: 192px;
+  margin-left: 155px;
   width: 187px;
-  height: 47px;
   background-image: url("../assets/figma/food-hero-b.png");
 }
 

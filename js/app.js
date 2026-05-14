@@ -18,9 +18,21 @@
     return storeApi.getAllStores().filter((store) => store.status === "approved");
   }
 
+  const CATEGORY_ORDER = ["한식", "중식", "양식", "일식", "아시안", "멕시칸", "버거"];
+
   function filterItems(stores) {
-    if (mode === "category") return unique(stores.map((store) => storeApi.getMenuCategory(store)));
-    return unique(stores.map((store) => storeApi.getDistrict(store.address)));
+    if (mode === "category") {
+      const present = new Set(stores.map((s) => storeApi.getMenuCategory(s)).filter(Boolean));
+      const ordered = CATEGORY_ORDER.filter((c) => present.has(c));
+      const rest = [...present].filter((c) => !CATEGORY_ORDER.includes(c));
+      return ["전체", ...ordered, ...rest];
+    }
+    const all = Array.from(new Set(stores.map((s) => storeApi.getDistrict(s.address)).filter(Boolean)));
+    const seoulDistricts = all.filter((d) =>
+      stores.some((s) => storeApi.getDistrict(s.address) === d && /^서울/.test(s.address))
+    );
+    const provincial = all.filter((d) => !seoulDistricts.includes(d));
+    return ["전체", ...seoulDistricts, ...provincial];
   }
 
   function filteredStores() {
@@ -42,13 +54,17 @@
         <div class="main-scroll" data-main-scroll>
           <section id="content-1" class="content-section content-1">
             <div class="hero-copy">
-              <h1>
-                <span class="hero-line">펩시가 입수한</span>
-                <span class="hero-line">로컬 맛집 스탭들의</span>
-                <span class="hero-line hero-line-connected"><span class="hero-shape hero-shape-small"></span><span>비밀 레시피</span></span>
-                <span class="hero-line">특별함을 찾는 특별한 사람들을</span>
-                <span class="hero-line hero-line-connected"><span>위해 공개합니다!</span><span class="hero-shape hero-shape-wide"></span></span>
-              </h1>
+              <div class="hero-text-grid">
+                <h1>
+                  <span class="hero-line">펩시가 입수한</span>
+                  <span class="hero-line">로컬 맛집 스탭들의</span>
+                  <span class="hero-line hero-line-indent">비밀 레시피</span>
+                  <span class="hero-line">특별함을 찾는 특별한 사람들을</span>
+                  <span class="hero-line">위해 공개합니다!</span>
+                </h1>
+                <span class="hero-img hero-img-a" aria-hidden="true"></span>
+                <span class="hero-img hero-img-b" aria-hidden="true"></span>
+              </div>
               <p>펩시제로라임을 최상의 페어링으로 즐길 수 있는 전국의 감도 높은 F&amp;B 매장 큐레이션 캠페인</p>
             </div>
             ${components.scrollHint()}
