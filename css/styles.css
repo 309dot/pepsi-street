@@ -48,6 +48,7 @@ body[data-page="main"] {
   background: #050505;
   color: var(--ps-white);
   overflow: hidden;
+  word-break: keep-all;
 }
 
 .mobile-shell {
@@ -185,6 +186,7 @@ body[data-page="main"] {
   color: rgba(146, 253, 15, 0.82);
   font-size: 16px;
   line-height: 1.38;
+  word-break: keep-all;
 }
 
 .hero-food {
@@ -339,6 +341,7 @@ body[data-page="main"] {
   font-size: 16px;
   font-weight: 800;
   line-height: 24px;
+  word-break: keep-all;
 }
 
 .ps-tabs button.is-active {
@@ -362,14 +365,14 @@ body[data-page="main"] {
 }
 
 .store-row h3 {
-  overflow: hidden;
   margin: 0;
   color: var(--ps-white);
   font-size: 30px;
   font-weight: 900;
   line-height: 36px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 .store-row.is-lime h3 {
@@ -378,14 +381,14 @@ body[data-page="main"] {
 
 .store-row p,
 .store-row address {
-  overflow: hidden;
   margin: 1px 0 0;
   color: rgba(255, 255, 255, 0.6);
   font-size: 12px;
   font-style: normal;
   line-height: 16px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 .empty-state {
@@ -450,6 +453,7 @@ body[data-page="main"] {
   font-weight: 900;
   line-height: 36px;
   color: var(--ps-white);
+  word-break: keep-all;
 }
 
 .map-copy p:last-child {
@@ -461,6 +465,7 @@ body[data-page="main"] {
   color: var(--ps-white);
   font-size: 14px;
   line-height: 20px;
+  word-break: keep-all;
 }
 
 .map-card-grid {
@@ -656,11 +661,17 @@ body[data-page="main"] {
   font-size: 16px;
   font-weight: 950;
   letter-spacing: 0;
+  word-break: keep-all;
 }
 
-.rolling-unit img {
+.rolling-star {
   width: 16px;
   height: 16px;
+}
+
+.rolling-word {
+  width: auto;
+  height: 18px;
 }
 
 .intro-screen {
@@ -858,6 +869,7 @@ body[data-page="main"] {
 .notice-box p {
   font-size: 14px;
   line-height: 20px;
+  word-break: keep-all;
 }
 
 .primary-pill {
@@ -892,6 +904,7 @@ body[data-page="main"] {
   color: var(--ps-white);
   font-size: 14px;
   line-height: 20px;
+  word-break: keep-all;
 }
 
 body[data-page="dashboard"] {

@@ -2,6 +2,7 @@
   const assets = {
     logo: "assets/figma/pepsi-logo.svg",
     star: "assets/figma/rolling-star.svg",
+    rollingText: "assets/figma/rolling-pepsi-street.svg",
     hand: "assets/figma/scroll-hand.svg",
     icons: {
       menu: "assets/figma/icon-menu.svg",
@@ -92,8 +93,8 @@
       .map(
         () => `
           <span class="rolling-unit">
-            <img src="${assets.star}" alt="" />
-            <strong>HORIZON</strong>
+            <img class="rolling-star" src="${assets.star}" alt="" />
+            <img class="rolling-word" src="${assets.rollingText}" alt="" />
           </span>
         `,
       )
@@ -147,11 +148,11 @@
       <div class="ps-toggle" role="tablist" aria-label="매장 분류">
         <button class="${mode === "category" ? "is-active" : ""}" type="button" data-mode="category">
           <img src="${assets.icons.toggleFood}" alt="" />
-          음식별
+          메뉴별
         </button>
         <button class="${mode === "district" ? "is-active" : ""}" type="button" data-mode="district">
           <img src="${assets.icons.toggleDistrict}" alt="" />
-          동네별
+          지역별
         </button>
       </div>
     `;
@@ -222,7 +223,7 @@
         (store, index) => `
           <article class="store-row ${index % 2 === 1 ? "is-lime" : ""}">
             <h3>${escapeHtml(store.name)}</h3>
-            <p>${escapeHtml(store.category)} · ${escapeHtml(window.PepsiStreetStore.getDistrict(store.address))}</p>
+            <p>${escapeHtml(window.PepsiStreetStore.getMenuCategory(store))} · ${escapeHtml(window.PepsiStreetStore.getDistrict(store.address))}</p>
             <address>${escapeHtml(store.address)}</address>
           </article>
         `,

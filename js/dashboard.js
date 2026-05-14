@@ -18,7 +18,7 @@
       .filter((store) => store.status === activeStatus)
       .filter((store) => {
         if (!needle) return true;
-        return [store.name, store.category, store.address, store.note, store.email, store.phone]
+        return [store.name, store.category, store.menuCategory, store.address, store.note, store.email, store.phone]
           .join(" ")
           .toLowerCase()
           .includes(needle);
@@ -77,6 +77,7 @@
               <h2>${edit ? "매장 수정" : activeStatus === "pending" ? "신청 매장 직접 등록" : "완료 매장 직접 등록"}</h2>
               ${field("name", "매장명", edit?.name || "", true)}
               ${field("category", "카테고리", edit?.category || "", true)}
+              ${field("menuCategory", "메뉴 분류", edit?.menuCategory || api.getMenuCategory(edit || {}) || "", true)}
               ${field("address", "주소", edit?.address || "", true)}
               ${field("note", "비고", edit?.note || "", false, true)}
               ${field("email", "이메일", edit?.email || "", false)}
@@ -138,7 +139,7 @@
       categories: topCounts([
         ...filters.filter((event) => event.payload.mode === "category").map((event) => event.payload.filter),
         ...scoped.filter((event) => event.type === "register_submit").map((event) => event.payload.category),
-        ...approved.map((store) => store.category),
+        ...approved.map((store) => api.getMenuCategory(store)),
       ], 8),
       districts: topCounts([
         ...filters.filter((event) => event.payload.mode === "district").map((event) => event.payload.filter),
@@ -326,6 +327,7 @@
           <tr>
             <th>매장</th>
             <th>카테고리</th>
+            <th>메뉴 분류</th>
             <th>주소</th>
             <th>비고</th>
             <th>관리</th>
@@ -341,6 +343,7 @@
                     <span>${h(store.email || store.phone || api.getDistrict(store.address))}</span>
                   </td>
                   <td>${h(store.category)}</td>
+                  <td>${h(api.getMenuCategory(store))}</td>
                   <td>${h(store.address)}</td>
                   <td>${h(store.note || "-")}</td>
                   <td>
@@ -396,6 +399,7 @@
         status: previous?.status || activeStatus,
         name: form.get("name"),
         category: form.get("category"),
+        menuCategory: form.get("menuCategory"),
         address: form.get("address"),
         note: form.get("note"),
         email: form.get("email"),

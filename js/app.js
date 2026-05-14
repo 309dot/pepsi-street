@@ -19,14 +19,14 @@
   }
 
   function filterItems(stores) {
-    if (mode === "category") return unique(stores.map((store) => store.category));
+    if (mode === "category") return unique(stores.map((store) => storeApi.getMenuCategory(store)));
     return unique(stores.map((store) => storeApi.getDistrict(store.address)));
   }
 
   function filteredStores() {
     const stores = approvedStores();
     if (activeFilter === "전체") return stores;
-    if (mode === "category") return stores.filter((store) => store.category === activeFilter);
+    if (mode === "category") return stores.filter((store) => storeApi.getMenuCategory(store) === activeFilter);
     return stores.filter((store) => storeApi.getDistrict(store.address) === activeFilter);
   }
 
@@ -73,10 +73,6 @@
             <p class="map-caption">원하는 지도를 선택해 나만의 펩시스트릿 지도를 확인해 보세요</p>
             ${components.mapCards(storeApi.getMapLinks())}
             <p class="map-update">지도는 계속 업데이트 될 예정입니다.</p>
-            <button class="ghost-register" type="button" data-open-register>
-              <img class="inline-icon" src="${components.assets.icons.register}" alt="" />
-              매장 등록 신청
-            </button>
             <footer>Pepsi Horizon © 2026</footer>
           </section>
         </div>
@@ -308,6 +304,7 @@
   }
 
   function openRegisterModal() {
+    if (app.querySelector("[data-register-modal], [data-confirm-modal]")) return;
     setMenuOpen(false);
     window.PepsiAnalytics?.track("register_open");
     app.insertAdjacentHTML("beforeend", components.registerModal());

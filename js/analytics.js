@@ -61,7 +61,7 @@
   }
 
   function fallbackEvents(stores) {
-    const categories = Array.from(new Set(stores.map((store) => store.category))).slice(0, 14);
+    const categories = Array.from(new Set(stores.map((store) => window.PepsiStreetStore.getMenuCategory(store)))).slice(0, 14);
     const districts = Array.from(new Set(stores.map((store) => window.PepsiStreetStore.getDistrict(store.address)))).slice(0, 12);
     const sources = ["instagram", "naver", "kakao", "direct", "youtube", "search"];
     const mapTypes = ["naver", "kakao", "google"];
