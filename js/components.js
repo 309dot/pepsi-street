@@ -2,7 +2,7 @@
   const assets = {
     logo: "assets/figma/pepsi-logo.svg",
     star: "assets/figma/rolling-star.svg",
-    rollingText: "assets/figma/rolling-pepsi-street.svg",
+    rollingText: "assets/figma/pepsi-street.svg",
     hand: "assets/figma/scroll-hand.svg",
     icons: {
       menu: "assets/figma/icon-menu.svg",
@@ -158,6 +158,15 @@
     `;
   }
 
+  function floatingRegisterButton() {
+    return `
+      <button class="floating-register" type="button" data-open-register aria-label="매장 등록 신청 모달 열기">
+        <img class="inline-icon" src="${assets.icons.register}" alt="" />
+        <span>매장 등록 신청</span>
+      </button>
+    `;
+  }
+
   function tabs({ items, active, showIcons = true }) {
     return `
       <div class="ps-tabs" role="tablist" aria-label="상세 분류">
@@ -292,7 +301,7 @@
     const cards = [
       ["naver", "네이버 지도", "white"],
       ["kakao", "카카오맵", "yellow"],
-      ["google", "구글맵", "white"],
+      ["google", "구글 지도", "white"],
     ];
 
     return `
@@ -317,6 +326,7 @@
     rollingBanner,
     nav,
     toggle,
+    floatingRegisterButton,
     tabs,
     intro,
     scrollHint,

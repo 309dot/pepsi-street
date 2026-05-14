@@ -534,6 +534,31 @@ body[data-page="main"] {
   line-height: 24px;
 }
 
+.floating-register {
+  position: fixed;
+  right: max(16px, calc((100vw - 430px) / 2 + 16px));
+  bottom: calc(52px + env(safe-area-inset-bottom));
+  z-index: 28;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 154px;
+  min-height: 48px;
+  padding: 12px 18px;
+  border: 1px solid #000;
+  border-radius: var(--ps-radius-full);
+  background: var(--ps-blue);
+  box-shadow:
+    inset 0 -1px 1px rgba(0, 0, 0, 0.22),
+    0 12px 36px rgba(0, 0, 0, 0.34);
+  color: var(--ps-white);
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 20px;
+  white-space: nowrap;
+}
+
 .ps-nav {
   position: fixed;
   top: 0;
@@ -671,7 +696,7 @@ body[data-page="main"] {
 
 .rolling-word {
   width: auto;
-  height: 18px;
+  height: 12px;
 }
 
 .intro-screen {

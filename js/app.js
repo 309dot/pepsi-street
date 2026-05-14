@@ -77,6 +77,7 @@
           </section>
         </div>
         ${components.rollingBanner()}
+        ${components.floatingRegisterButton()}
       </div>
     `;
 
