@@ -94,7 +94,7 @@
               <h2>팹시스트릿 지도 URL 관리</h2>
               ${field("naver", "네이버 지도 URL", mapLinks.naver, true)}
               ${field("kakao", "카카오맵 URL", mapLinks.kakao, true)}
-              ${field("google", "구글맵 URL", mapLinks.google, true)}
+              ${field("tmap", "티맵 URL", mapLinks.tmap, true)}
               <button class="dash-button primary" type="submit">지도 URL 저장</button>
             </form>
           </section>
@@ -415,7 +415,7 @@
       api.saveMapLinks({
         naver: form.get("naver"),
         kakao: form.get("kakao"),
-        google: form.get("google"),
+        tmap: form.get("tmap"),
       });
       render();
     });

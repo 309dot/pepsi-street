@@ -43,11 +43,11 @@
           <section id="content-1" class="content-section content-1">
             <div class="hero-copy">
               <h1>
-                <span class="hero-line">펩시가 입수한 로컬</span>
-                <span class="hero-line">맛집 스탭들의 <span class="hero-shape hero-shape-small"></span></span>
-                <span class="hero-line">비밀 레시피 특별함을</span>
-                <span class="hero-line hero-line-connected"><span class="hero-shape hero-shape-wide"></span><span>찾는</span></span>
-                <span class="hero-line">특별한 사람들을 위해 공개합니다!</span>
+                <span class="hero-line">펩시가 입수한</span>
+                <span class="hero-line">로컬 맛집 스탭들의</span>
+                <span class="hero-line hero-line-connected"><span class="hero-shape hero-shape-small"></span><span>비밀 레시피</span></span>
+                <span class="hero-line">특별함을 찾는 특별한 사람들을</span>
+                <span class="hero-line hero-line-connected"><span>위해 공개합니다!</span><span class="hero-shape hero-shape-wide"></span></span>
               </h1>
               <p>펩시제로라임을 최상의 페어링으로 즐길 수 있는 전국의 감도 높은 F&amp;B 매장 큐레이션 캠페인</p>
             </div>

@@ -89,6 +89,6 @@
   window.PEPSI_DEFAULT_MAP_LINKS = {
     naver: "https://map.naver.com/v5/search/%ED%8E%A9%EC%8B%9C%EC%8A%A4%ED%8A%B8%EB%A6%BF",
     kakao: "https://map.kakao.com/link/search/%ED%8E%A9%EC%8B%9C%EC%8A%A4%ED%8A%B8%EB%A6%BF",
-    google: "https://www.google.com/maps/search/%ED%8E%A9%EC%8B%9C%EC%8A%A4%ED%8A%B8%EB%A6%BF",
+    tmap: "https://tmap.life/pepsistreet",
   };
 })();

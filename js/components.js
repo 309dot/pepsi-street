@@ -22,11 +22,12 @@
       owner: "assets/figma/icon-owner.svg",
       menuFood: "assets/figma/icon-menu-food.svg",
       close: "assets/figma/icon-close.svg",
+      floatRegister: "assets/figma/icon-float-register.svg",
     },
     maps: {
       naver: "assets/figma/map-naver.png",
       kakao: "assets/figma/map-kakao.png",
-      google: "assets/figma/map-google.png",
+      tmap: "assets/figma/map-tmap.png",
     },
     food: [
       "assets/figma/store-float-1.png",
@@ -161,8 +162,7 @@
   function floatingRegisterButton() {
     return `
       <button class="floating-register" type="button" data-open-register aria-label="매장 등록 신청 모달 열기">
-        <img class="inline-icon" src="${assets.icons.register}" alt="" />
-        <span>매장 등록 신청</span>
+        <img src="${assets.icons.floatRegister}" alt="" />
       </button>
     `;
   }
@@ -301,7 +301,7 @@
     const cards = [
       ["naver", "네이버 지도", "white"],
       ["kakao", "카카오맵", "yellow"],
-      ["google", "구글 지도", "white"],
+      ["tmap", "티맵", "white"],
     ];
 
     return `
