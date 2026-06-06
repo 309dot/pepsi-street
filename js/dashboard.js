@@ -10,9 +10,28 @@
     { id: "images", label: "메인 이미지 관리", title: "메인 이미지 관리", desc: "메인 화면에 랜덤 노출할 이미지를 관리합니다." },
   ];
 
+  const CATEGORY_ORDER = ["한식", "중식", "양식", "일식", "아시안", "멕시칸", "버거"];
+
+  const ICONS = {
+    plus: '<path d="M10 4v12M4 10h12"/>',
+    check: '<path d="M4 10.5l4 4L16 5"/>',
+    edit: '<path d="M13.5 3.5l3 3L7 16l-4 1 1-4z"/>',
+    trash: '<path d="M4 5h12M8 5V3h4v2M5.5 5l.7 11h7.6l.7-11"/>',
+    external: '<path d="M11 3h6v6M17 3l-8 8M15 11.5V16a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1h4.5"/>',
+    link: '<path d="M8.5 11.5l3-3M7 9.5L5 11.5a2.5 2.5 0 003.5 3.5l2-2M9.5 7.5l2-2A2.5 2.5 0 0115 9l-2 2"/>',
+  };
+
+  function icon(name) {
+    return `<svg class="ui-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ""}</svg>`;
+  }
+
   let activePage = "overview";
   let storeModalOpen = false;
   let activeStatus = "approved";
+  let storeMode = "category";
+  let storeFilter = "전체";
+  let heroEditIndex = null;
+  let imagePreviewIndex = null;
   let query = "";
   let editingId = null;
   let activePeriod = 28;
@@ -21,10 +40,32 @@
     return api.getAllStores();
   }
 
+  function scopedStores() {
+    return stores().filter((store) => store.status === activeStatus);
+  }
+
+  function storeFilterItems() {
+    const scoped = scopedStores();
+    if (storeMode === "category") {
+      const present = new Set(scoped.map((s) => api.getMenuCategory(s)).filter(Boolean));
+      const ordered = CATEGORY_ORDER.filter((c) => present.has(c));
+      const rest = [...present].filter((c) => !CATEGORY_ORDER.includes(c));
+      return ["전체", ...ordered, ...rest];
+    }
+    const all = Array.from(new Set(scoped.map((s) => api.getDistrict(s.address)).filter(Boolean)));
+    const seoul = all.filter((d) => scoped.some((s) => api.getDistrict(s.address) === d && /^서울/.test(s.address)));
+    const rest = all.filter((d) => !seoul.includes(d));
+    return ["전체", ...seoul, ...rest];
+  }
+
   function visibleStores() {
     const needle = query.trim().toLowerCase();
-    return stores()
-      .filter((store) => store.status === activeStatus)
+    return scopedStores()
+      .filter((store) => {
+        if (storeFilter === "전체") return true;
+        if (storeMode === "category") return api.getMenuCategory(store) === storeFilter;
+        return api.getDistrict(store.address) === storeFilter;
+      })
       .filter((store) => {
         if (!needle) return true;
         return [store.name, store.category, store.menuCategory, store.address, store.note, store.email, store.phone]
@@ -60,6 +101,7 @@
         </main>
       </div>
       ${storeModalMarkup()}
+      ${imagePreviewMarkup()}
     `;
 
     bind();
@@ -109,6 +151,8 @@
   }
 
   function storesPageMarkup() {
+    const filters = storeFilterItems();
+    if (!filters.includes(storeFilter)) storeFilter = "전체";
     return `
       <section class="dash-panel">
         <div class="dash-panel-header">
@@ -118,25 +162,60 @@
           </div>
           <div class="dash-panel-tools">
             <input class="dash-search" type="search" value="${h(query)}" placeholder="매장명, 카테고리, 주소 검색" data-search />
-            <button class="dash-button primary" type="button" data-open-store-modal>+ 매장 등록</button>
+          </div>
+        </div>
+        <div class="store-filter-bar">
+          <div class="dash-toggle" role="tablist" aria-label="매장 분류">
+            <button class="${storeMode === "category" ? "is-active" : ""}" type="button" data-store-mode="category">메뉴별</button>
+            <button class="${storeMode === "district" ? "is-active" : ""}" type="button" data-store-mode="district">지역별</button>
+          </div>
+          <div class="dash-subtabs" role="tablist" aria-label="상세 분류">
+            ${filters
+              .map(
+                (item) => `<button class="${item === storeFilter ? "is-active" : ""}" type="button" data-store-filter="${h(item)}">${h(item)}</button>`,
+              )
+              .join("")}
           </div>
         </div>
         <div class="store-table-wrap">
           ${tableMarkup(visibleStores())}
         </div>
       </section>
+      <button class="dash-fab" type="button" data-open-store-modal aria-label="매장 등록">${icon("plus")}</button>
     `;
   }
 
   function mapsPageMarkup() {
     const mapLinks = api.getMapLinks();
+    const rows = [
+      { name: "naver", label: "네이버 지도 URL", value: mapLinks.naver || "" },
+      { name: "kakao", label: "카카오맵 URL", value: mapLinks.kakao || "" },
+      { name: "tmap", label: "티맵 URL", value: mapLinks.tmap || "" },
+    ];
     return `
       <section class="dash-panel">
         <form class="dash-form" data-map-form>
           <h2>팹시스트릿 지도 URL 관리</h2>
-          ${field("naver", "네이버 지도 URL", mapLinks.naver, true)}
-          ${field("kakao", "카카오맵 URL", mapLinks.kakao, true)}
-          ${field("tmap", "티맵 URL", mapLinks.tmap, true)}
+          ${rows
+            .map(
+              (row) => `
+                <div class="map-url-row">
+                  <label class="dash-field">
+                    <span>${h(row.label)}</span>
+                    <div class="map-url-input">
+                      <input name="${row.name}" value="${h(row.value)}" required />
+                      <button class="dash-button map-open" type="button" data-map-open="${row.name}" title="새 탭에서 열기">${icon("external")}바로가기</button>
+                    </div>
+                  </label>
+                  ${
+                    row.value
+                      ? `<a class="map-url-preview" href="${h(row.value)}" target="_blank" rel="noreferrer">${icon("link")}<span>${h(row.value)}</span></a>`
+                      : `<p class="map-url-empty">저장된 링크가 없습니다.</p>`
+                  }
+                </div>
+              `,
+            )
+            .join("")}
           <button class="dash-button primary" type="submit">지도 URL 저장</button>
         </form>
       </section>
@@ -392,8 +471,13 @@
       .map(
         (src, index) => `
           <div class="hero-image-thumb">
-            <img src="${src}" alt="메인 이미지 ${index + 1}" />
-            <button class="hero-image-remove" type="button" data-hero-remove="${index}" aria-label="이미지 삭제">×</button>
+            <button class="hero-image-preview" type="button" data-hero-preview="${index}" aria-label="이미지 미리보기">
+              <img src="${src}" alt="메인 이미지 ${index + 1}" />
+            </button>
+            <div class="hero-image-actions">
+              <button class="icon-btn" type="button" data-hero-edit="${index}" title="수정" aria-label="이미지 수정">${icon("edit")}</button>
+              <button class="icon-btn danger" type="button" data-hero-remove="${index}" title="삭제" aria-label="이미지 삭제">${icon("trash")}</button>
+            </div>
           </div>
         `,
       )
@@ -408,12 +492,41 @@
             ${thumbs || `<p class="analytics-empty">등록된 이미지가 없습니다.</p>`}
           </div>
           <label class="dash-button primary hero-image-add ${remaining ? "" : "is-disabled"}">
-            이미지 추가
+            ${icon("plus")}이미지 추가
             <input type="file" accept="image/*" multiple data-hero-input ${remaining ? "" : "disabled"} hidden />
           </label>
+          <input type="file" accept="image/*" data-hero-edit-input hidden />
         </div>
       </section>
     `;
+  }
+
+  function imagePreviewMarkup() {
+    if (imagePreviewIndex === null) return "";
+    const images = api.getHeroImages();
+    const src = images[imagePreviewIndex];
+    if (!src) return "";
+    return `
+      <div class="dash-modal-overlay image-preview-overlay" data-image-preview-overlay>
+        <div class="image-preview-box">
+          <button class="dash-modal-close" type="button" data-close-image-preview aria-label="닫기">×</button>
+          <img src="${src}" alt="메인 이미지 미리보기" />
+        </div>
+      </div>
+    `;
+  }
+
+  async function replaceHeroImage(index, file) {
+    if (!file || !file.type.startsWith("image/")) return;
+    const images = api.getHeroImages();
+    if (index < 0 || index >= images.length) return;
+    try {
+      images[index] = await compressImage(file);
+      api.saveHeroImages(images);
+    } catch (error) {
+      window.alert("이미지를 처리하지 못했습니다.");
+    }
+    render();
   }
 
   function compressImage(file) {
@@ -508,9 +621,9 @@
                   <td>${h(store.note || "-")}</td>
                   <td>
                     <div class="row-actions">
-                      ${store.status === "pending" ? `<button class="dash-button primary" type="button" data-approve="${h(store.id)}">수락</button>` : ""}
-                      <button class="dash-button" type="button" data-edit="${h(store.id)}">수정</button>
-                      <button class="dash-button danger" type="button" data-delete="${h(store.id)}">삭제</button>
+                      ${store.status === "pending" ? `<button class="icon-btn approve" type="button" data-approve="${h(store.id)}" title="수락" aria-label="수락">${icon("check")}</button>` : ""}
+                      <button class="icon-btn" type="button" data-edit="${h(store.id)}" title="수정" aria-label="수정">${icon("edit")}</button>
+                      <button class="icon-btn danger" type="button" data-delete="${h(store.id)}" title="삭제" aria-label="삭제">${icon("trash")}</button>
                     </div>
                   </td>
                 </tr>
@@ -529,6 +642,7 @@
         activePage = button.dataset.page;
         editingId = null;
         storeModalOpen = false;
+        imagePreviewIndex = null;
         render();
       });
     });
@@ -546,10 +660,75 @@
     root.querySelectorAll("[data-tab]").forEach((button) => {
       button.addEventListener("click", () => {
         activeStatus = button.dataset.tab;
+        storeFilter = "전체";
         editingId = null;
         render();
       });
     });
+
+    root.querySelectorAll("[data-store-mode]").forEach((button) => {
+      button.addEventListener("click", () => {
+        if (storeMode === button.dataset.storeMode) return;
+        storeMode = button.dataset.storeMode;
+        storeFilter = "전체";
+        render();
+      });
+    });
+
+    root.querySelectorAll("[data-store-filter]").forEach((button) => {
+      button.addEventListener("click", () => {
+        if (storeFilter === button.dataset.storeFilter) return;
+        storeFilter = button.dataset.storeFilter;
+        render();
+      });
+    });
+
+    root.querySelectorAll("[data-map-open]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const input = button.closest(".map-url-input")?.querySelector("input");
+        const url = (input?.value || "").trim();
+        if (url) window.open(url, "_blank", "noopener");
+      });
+    });
+
+    root.querySelectorAll("[data-hero-preview]").forEach((button) => {
+      button.addEventListener("click", () => {
+        imagePreviewIndex = Number(button.dataset.heroPreview);
+        render();
+      });
+    });
+
+    root.querySelector("[data-close-image-preview]")?.addEventListener("click", () => {
+      imagePreviewIndex = null;
+      render();
+    });
+
+    root.querySelector("[data-image-preview-overlay]")?.addEventListener("click", (event) => {
+      if (event.target === event.currentTarget) {
+        imagePreviewIndex = null;
+        render();
+      }
+    });
+
+    root.querySelectorAll("[data-hero-edit]").forEach((button) => {
+      button.addEventListener("click", () => {
+        heroEditIndex = Number(button.dataset.heroEdit);
+        root.querySelector("[data-hero-edit-input]")?.click();
+      });
+    });
+
+    root.querySelector("[data-hero-edit-input]")?.addEventListener("change", (event) => {
+      const input = event.currentTarget;
+      if (input.files?.length && heroEditIndex !== null) replaceHeroImage(heroEditIndex, input.files[0]);
+      heroEditIndex = null;
+      input.value = "";
+    });
+
+    const activeSubtab = root.querySelector(".dash-subtabs .is-active");
+    if (activeSubtab) {
+      const bar = activeSubtab.parentElement;
+      bar.scrollLeft = Math.max(0, activeSubtab.offsetLeft - (parseFloat(getComputedStyle(bar).paddingLeft) || 0));
+    }
 
     root.querySelectorAll("[data-period]").forEach((button) => {
       button.addEventListener("click", () => {
