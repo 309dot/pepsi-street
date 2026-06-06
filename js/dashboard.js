@@ -4,10 +4,10 @@
   const h = window.PepsiComponents.escapeHtml;
 
   const PAGES = [
-    { id: "overview", label: "대시보드", title: "대시보드", desc: "매장 등록 현황과 마케팅 퍼포먼스를 확인합니다." },
-    { id: "stores", label: "매장관리", title: "매장관리", desc: "등록 완료·신청 매장을 관리합니다." },
-    { id: "maps", label: "지도 URL 관리", title: "지도 URL 관리", desc: "팹시스트릿 지도 URL을 관리합니다." },
-    { id: "images", label: "메인 이미지 관리", title: "메인 이미지 관리", desc: "메인 화면에 랜덤 노출할 이미지를 관리합니다." },
+    { id: "overview", label: "대시보드", title: "대시보드", desc: "매장 등록 현황과 마케팅 퍼포먼스를 한 화면에서 확인합니다.", meta: "성과 요약", icon: "dashboard" },
+    { id: "stores", label: "매장관리", title: "매장관리", desc: "등록 완료 매장과 신청 매장을 빠르게 검토하고 정리합니다.", meta: "운영 관리", icon: "store" },
+    { id: "maps", label: "지도 URL 관리", title: "지도 URL 관리", desc: "외부 지도 링크를 채널별로 검수하고 업데이트합니다.", meta: "외부 링크", icon: "map" },
+    { id: "images", label: "메인 이미지 관리", title: "메인 이미지 관리", desc: "메인 화면에 노출할 이미지를 업로드하고 순서를 점검합니다.", meta: "콘텐츠 자산", icon: "image" },
   ];
 
   const CATEGORY_ORDER = ["한식", "중식", "양식", "일식", "아시안", "멕시칸", "버거"];
@@ -19,6 +19,12 @@
     trash: '<path d="M4 5h12M8 5V3h4v2M5.5 5l.7 11h7.6l.7-11"/>',
     external: '<path d="M11 3h6v6M17 3l-8 8M15 11.5V16a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1h4.5"/>',
     link: '<path d="M8.5 11.5l3-3M7 9.5L5 11.5a2.5 2.5 0 003.5 3.5l2-2M9.5 7.5l2-2A2.5 2.5 0 0115 9l-2 2"/>',
+    search: '<circle cx="9" cy="9" r="5.5"/><path d="M13.2 13.2L16.5 16.5"/>',
+    dashboard: '<path d="M3.5 4.5h5.5v5.5H3.5zM11 4.5h5.5v3.5H11zM11 10h5.5v5.5H11zM3.5 12h5.5v3.5H3.5z"/>',
+    store: '<path d="M3.5 8.5h13v8h-13zM5 8.5V5.8l1.1-2.3h7.8L15 5.8v2.7M7 11.5h2.5M11.5 11.5H13"/>',
+    map: '<path d="M10 16.5s4-4.2 4-7.5a4 4 0 10-8 0c0 3.3 4 7.5 4 7.5z"/><circle cx="10" cy="9" r="1.6"/>',
+    image: '<rect x="3.5" y="4.5" width="13" height="11" rx="1.5"/><path d="M6.5 12l2.5-2.8 2.1 2.2 1.7-1.6 2.7 3.2"/><circle cx="7" cy="8" r="1"/>',
+    refresh: '<path d="M16 10a6 6 0 10-1.2 3.6"/><path d="M16 5.5v4h-4"/>',
   };
 
   function icon(name) {
@@ -35,6 +41,7 @@
   let query = "";
   let editingId = null;
   let activePeriod = 28;
+  let confirmAction = null;
 
   function stores() {
     return api.getAllStores();
@@ -82,45 +89,67 @@
   function render() {
     const all = stores();
     const page = PAGES.find((item) => item.id === activePage) || PAGES[0];
+    const approvedCount = all.filter((store) => store.status === "approved").length;
+    const pendingCount = all.filter((store) => store.status === "pending").length;
 
     root.innerHTML = `
       <div class="dash-layout">
-        ${sidebarMarkup(all)}
+        ${sidebarMarkup(all, approvedCount, pendingCount)}
         <main class="dash-content">
           <header class="dash-header">
-            <div>
+            <div class="dash-header-copy">
+              <p class="dash-kicker">Pepsi Street Admin</p>
               <h1>${h(page.title)}</h1>
               <p>${h(page.desc)}</p>
             </div>
             <div class="dash-actions">
-              <a class="dash-button" href="index.html" target="_blank" rel="noreferrer">사이트 보기</a>
-              <button class="dash-button danger" type="button" data-reset>초기 데이터 복원</button>
+              <a class="icon-btn header-icon-btn" href="index.html" target="_blank" rel="noreferrer" title="사이트 보기" aria-label="사이트 보기">${icon("external")}</a>
+              <button class="icon-btn danger header-icon-btn" type="button" data-reset title="초기 데이터 복원" aria-label="초기 데이터 복원">${icon("refresh")}</button>
             </div>
           </header>
           ${pageMarkup(all)}
         </main>
       </div>
       ${storeModalMarkup()}
+      ${confirmModalMarkup()}
       ${imagePreviewMarkup()}
     `;
 
     bind();
   }
 
-  function sidebarMarkup(all) {
-    const pending = all.filter((store) => store.status === "pending").length;
+  function sidebarMarkup(all, approvedCount, pendingCount) {
     return `
       <aside class="dash-sidebar">
         <div class="dash-brand">
           <img src="assets/figma/pepsi-logo.svg" alt="Pepsi" />
-          <span>Pepsi Street</span>
+          <div>
+            <strong>Pepsi Street</strong>
+            <span>Campaign Console</span>
+          </div>
+        </div>
+        <div class="dash-sidebar-stats" aria-label="운영 요약">
+          <div class="dash-sidebar-stat">
+            <span>등록 완료</span>
+            <strong>${approvedCount.toLocaleString()}</strong>
+          </div>
+          <div class="dash-sidebar-stat">
+            <span>승인 대기</span>
+            <strong>${pendingCount.toLocaleString()}</strong>
+          </div>
         </div>
         <nav class="dash-nav" aria-label="대시보드 메뉴">
           ${PAGES.map(
             (item) => `
               <button class="dash-nav-item ${item.id === activePage ? "is-active" : ""}" type="button" data-page="${item.id}">
-                <span>${h(item.label)}</span>
-                ${item.id === "stores" && pending ? `<em class="dash-nav-badge">${pending}</em>` : ""}
+                <span class="dash-nav-leading">
+                  <span class="dash-nav-icon">${icon(item.icon)}</span>
+                  <span class="dash-nav-copy">
+                    <strong>${h(item.label)}</strong>
+                    <small>${h(item.meta)}</small>
+                  </span>
+                </span>
+                ${item.id === "stores" && pendingCount ? `<em class="dash-nav-badge">${pendingCount}</em>` : ""}
               </button>
             `,
           ).join("")}
@@ -142,9 +171,21 @@
     const analytics = buildAnalytics(all, activePeriod);
     return `
       <section class="metric-row" aria-label="요약">
-        <div class="metric"><span>등록 완료 매장</span><strong>${approved.length}</strong></div>
-        <div class="metric"><span>등록 신청 매장</span><strong>${pending.length}</strong></div>
-        <div class="metric"><span>카테고리</span><strong>${new Set(approved.map((store) => store.category)).size}</strong></div>
+        <div class="metric">
+          <div class="metric-top"><span>등록 완료 매장</span><i>${icon("store")}</i></div>
+          <strong>${approved.length.toLocaleString()}</strong>
+          <p>메인 사이트에 즉시 노출되는 매장 수</p>
+        </div>
+        <div class="metric">
+          <div class="metric-top"><span>등록 신청 매장</span><i>${icon("check")}</i></div>
+          <strong>${pending.length.toLocaleString()}</strong>
+          <p>검수 및 승인 대기 중인 신청 건수</p>
+        </div>
+        <div class="metric">
+          <div class="metric-top"><span>카테고리</span><i>${icon("dashboard")}</i></div>
+          <strong>${new Set(approved.map((store) => store.category)).size}</strong>
+          <p>현재 노출 중인 매장 카테고리 분포</p>
+        </div>
       </section>
       ${analyticsMarkup(analytics)}
     `;
@@ -153,15 +194,27 @@
   function storesPageMarkup() {
     const filters = storeFilterItems();
     if (!filters.includes(storeFilter)) storeFilter = "전체";
+    const items = visibleStores();
     return `
       <section class="dash-panel">
         <div class="dash-panel-header">
-          <div class="dash-tabs" role="tablist" aria-label="매장 상태">
-            <button class="${activeStatus === "approved" ? "is-active" : ""}" type="button" data-tab="approved">등록 완료된 매장</button>
-            <button class="${activeStatus === "pending" ? "is-active" : ""}" type="button" data-tab="pending">등록 신청한 매장</button>
+          <div class="dash-panel-title">
+            <div>
+              <p class="panel-kicker">Store Operations</p>
+              <h2>매장 데이터 관리</h2>
+              <p>${activeStatus === "approved" ? "등록 완료된 매장을 유지보수합니다." : "신청 매장을 검토하고 승인합니다."}</p>
+            </div>
+            <button class="dash-button primary" type="button" data-open-store-modal>${icon("plus")}매장 등록</button>
           </div>
-          <div class="dash-panel-tools">
-            <input class="dash-search" type="search" value="${h(query)}" placeholder="매장명, 카테고리, 주소 검색" data-search />
+          <div class="dash-toolbar-row">
+            <div class="dash-tabs" role="tablist" aria-label="매장 상태">
+              <button class="${activeStatus === "approved" ? "is-active" : ""}" type="button" data-tab="approved">등록 완료된 매장</button>
+              <button class="${activeStatus === "pending" ? "is-active" : ""}" type="button" data-tab="pending">등록 신청한 매장</button>
+            </div>
+            <label class="dash-search-field">
+              ${icon("search")}
+              <input class="dash-search" type="search" value="${h(query)}" placeholder="매장명, 카테고리, 주소 검색" data-search />
+            </label>
           </div>
         </div>
         <div class="store-filter-bar">
@@ -176,9 +229,13 @@
               )
               .join("")}
           </div>
+          <div class="store-filter-meta">
+            <span>${storeMode === "category" ? "카테고리 기준" : "지역 기준"}</span>
+            <strong>${items.length.toLocaleString()}개 매장</strong>
+          </div>
         </div>
         <div class="store-table-wrap">
-          ${tableMarkup(visibleStores())}
+          ${tableMarkup(items)}
         </div>
       </section>
       <button class="dash-fab" type="button" data-open-store-modal aria-label="매장 등록">${icon("plus")}</button>
@@ -195,13 +252,24 @@
     return `
       <section class="dash-panel">
         <form class="dash-form" data-map-form>
-          <h2>팹시스트릿 지도 URL 관리</h2>
-          ${rows
+          <div class="dash-panel-title compact">
+            <div>
+              <p class="panel-kicker">Outbound Map Links</p>
+              <h2>팹시스트릿 지도 URL 관리</h2>
+              <p>채널별 링크를 보관하고, 저장 즉시 최신 링크를 운영 화면에 반영합니다.</p>
+            </div>
+          </div>
+          <div class="map-url-grid">
+            ${rows
             .map(
               (row) => `
                 <div class="map-url-row">
+                  <div class="map-url-row-head">
+                    <strong>${h(row.label)}</strong>
+                    <span>${h(row.name.toUpperCase())}</span>
+                  </div>
                   <label class="dash-field">
-                    <span>${h(row.label)}</span>
+                    <span>링크 주소</span>
                     <div class="map-url-input">
                       <input name="${row.name}" value="${h(row.value)}" required />
                       <button class="dash-button map-open" type="button" data-map-open="${row.name}" title="새 탭에서 열기">${icon("external")}바로가기</button>
@@ -216,6 +284,7 @@
               `,
             )
             .join("")}
+          </div>
           <button class="dash-button primary" type="submit">지도 URL 저장</button>
         </form>
       </section>
@@ -234,17 +303,22 @@
       <div class="dash-modal-overlay" data-store-modal-overlay>
         <div class="dash-modal" role="dialog" aria-modal="true" aria-label="${h(title)}">
           <div class="dash-modal-header">
-            <h2>${title}</h2>
+            <div>
+              <p class="panel-kicker">Store Editor</p>
+              <h2>${title}</h2>
+            </div>
             <button class="dash-modal-close" type="button" data-close-store-modal aria-label="닫기">×</button>
           </div>
-          <form class="dash-form" data-store-form>
-            ${field("name", "매장명", edit?.name || "", true)}
-            ${field("category", "카테고리", edit?.category || "", true)}
-            ${field("menuCategory", "메뉴 분류", edit?.menuCategory || api.getMenuCategory(edit || {}) || "", true)}
-            ${field("address", "주소", edit?.address || "", true)}
-            ${field("note", "비고", edit?.note || "", false, true)}
-            ${field("email", "이메일", edit?.email || "", false)}
-            ${field("phone", "전화번호", edit?.phone || "", false)}
+          <form class="dash-form dash-modal-form" data-store-form>
+            <div class="field-grid">
+              ${field("name", "매장명", edit?.name || "", true)}
+              ${field("category", "카테고리", edit?.category || "", true)}
+              ${field("menuCategory", "메뉴 분류", edit?.menuCategory || api.getMenuCategory(edit || {}) || "", true)}
+              ${field("address", "주소", edit?.address || "", true, false, "span-2")}
+              ${field("note", "비고", edit?.note || "", false, true, "span-2")}
+              ${field("email", "이메일", edit?.email || "", false)}
+              ${field("phone", "전화번호", edit?.phone || "", false)}
+            </div>
             <div class="form-actions">
               <button class="dash-button" type="button" data-close-store-modal>취소</button>
               <button class="dash-button primary" type="submit">${edit ? "수정 저장" : "매장 등록"}</button>
@@ -265,6 +339,73 @@
     editingId = null;
     storeModalOpen = false;
     render();
+  }
+
+  function openConfirmModal(type) {
+    if (type === "resetStores") {
+      confirmAction = {
+        type,
+        title: "초기 데이터를 복원할까요?",
+        message: "현재 등록한 매장, 지도 URL, 메인 이미지가 기본 데이터 상태로 되돌아갑니다.",
+        confirmLabel: "초기화",
+      };
+    } else if (type === "resetAnalytics") {
+      confirmAction = {
+        type,
+        title: "분석 데이터를 초기화할까요?",
+        message: "수집된 로컬 마케팅 분석 데이터가 모두 삭제되며, 되돌릴 수 없습니다.",
+        confirmLabel: "분석 초기화",
+      };
+    } else {
+      confirmAction = null;
+    }
+    render();
+  }
+
+  function closeConfirmModal() {
+    confirmAction = null;
+    render();
+  }
+
+  function runConfirmAction() {
+    if (!confirmAction) return;
+
+    if (confirmAction.type === "resetStores") {
+      api.resetStores();
+      editingId = null;
+      activeStatus = "approved";
+    }
+
+    if (confirmAction.type === "resetAnalytics") {
+      window.PepsiAnalytics.reset();
+    }
+
+    confirmAction = null;
+    render();
+  }
+
+  function confirmModalMarkup() {
+    if (!confirmAction) return "";
+    return `
+      <div class="dash-modal-overlay" data-confirm-modal-overlay>
+        <div class="dash-modal dash-confirm-modal" role="dialog" aria-modal="true" aria-label="${h(confirmAction.title)}">
+          <div class="dash-modal-header">
+            <div>
+              <p class="panel-kicker">Confirm Action</p>
+              <h2>${h(confirmAction.title)}</h2>
+            </div>
+            <button class="dash-modal-close" type="button" data-close-confirm-modal aria-label="닫기">×</button>
+          </div>
+          <div class="dash-form dash-confirm-body">
+            <p>${h(confirmAction.message)}</p>
+            <div class="form-actions">
+              <button class="dash-button" type="button" data-close-confirm-modal>취소</button>
+              <button class="dash-button danger" type="button" data-confirm-action>${h(confirmAction.confirmLabel)}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
   }
 
   function buildAnalytics(allStores, days) {
@@ -486,8 +627,13 @@
     return `
       <section class="dash-panel">
         <div class="dash-form">
-          <h2>메인 이미지 관리</h2>
-          <p class="hero-image-hint">최대 ${limit}개까지 첨부할 수 있으며, 메인 화면에 랜덤으로 노출됩니다. (현재 ${images.length}/${limit})</p>
+          <div class="dash-panel-title compact">
+            <div>
+              <p class="panel-kicker">Hero Assets</p>
+              <h2>메인 이미지 관리</h2>
+              <p>최대 ${limit}개까지 첨부할 수 있으며 메인 화면에 랜덤으로 노출됩니다. 현재 ${images.length}/${limit}개가 저장되어 있습니다.</p>
+            </div>
+          </div>
           <div class="hero-image-grid">
             ${thumbs || `<p class="analytics-empty">등록된 이미지가 없습니다.</p>`}
           </div>
@@ -575,10 +721,10 @@
     render();
   }
 
-  function field(name, label, value, required = false, textarea = false) {
+  function field(name, label, value, required = false, textarea = false, className = "") {
     const attrs = `name="${h(name)}" ${required ? "required" : ""}`;
     return `
-      <label class="dash-field">
+      <label class="dash-field ${className}">
         <span>${h(label)}</span>
         ${
           textarea
@@ -612,13 +758,15 @@
               (store) => `
                 <tr>
                   <td class="store-name-cell">
-                    <strong>${h(store.name)}</strong>
+                    <div class="store-name-main">
+                      <strong>${h(store.name)}</strong>
+                    </div>
                     <span>${h(store.email || store.phone || api.getDistrict(store.address))}</span>
                   </td>
-                  <td>${h(store.category)}</td>
-                  <td>${h(api.getMenuCategory(store))}</td>
-                  <td>${h(store.address)}</td>
-                  <td>${h(store.note || "-")}</td>
+                  <td><span class="store-badge">${h(store.category)}</span></td>
+                  <td><span class="store-badge subtle">${h(api.getMenuCategory(store))}</span></td>
+                  <td class="store-address">${h(store.address)}</td>
+                  <td class="store-note">${h(store.note || "-")}</td>
                   <td>
                     <div class="row-actions">
                       ${store.status === "pending" ? `<button class="icon-btn approve" type="button" data-approve="${h(store.id)}" title="수락" aria-label="수락">${icon("check")}</button>` : ""}
@@ -647,7 +795,9 @@
       });
     });
 
-    root.querySelector("[data-open-store-modal]")?.addEventListener("click", () => openStoreModal(null));
+    root.querySelectorAll("[data-open-store-modal]").forEach((button) => {
+      button.addEventListener("click", () => openStoreModal(null));
+    });
 
     root.querySelectorAll("[data-close-store-modal]").forEach((button) => {
       button.addEventListener("click", closeStoreModal);
@@ -737,10 +887,7 @@
       });
     });
 
-    root.querySelector("[data-reset-analytics]")?.addEventListener("click", () => {
-      window.PepsiAnalytics.reset();
-      render();
-    });
+    root.querySelector("[data-reset-analytics]")?.addEventListener("click", () => openConfirmModal("resetAnalytics"));
 
     root.querySelector("[data-search]")?.addEventListener("input", (event) => {
       query = event.target.value;
@@ -813,12 +960,17 @@
       });
     });
 
-    root.querySelector("[data-reset]")?.addEventListener("click", () => {
-      api.resetStores();
-      editingId = null;
-      activeStatus = "approved";
-      render();
+    root.querySelector("[data-reset]")?.addEventListener("click", () => openConfirmModal("resetStores"));
+
+    root.querySelectorAll("[data-close-confirm-modal]").forEach((button) => {
+      button.addEventListener("click", closeConfirmModal);
     });
+
+    root.querySelector("[data-confirm-modal-overlay]")?.addEventListener("click", (event) => {
+      if (event.target === event.currentTarget) closeConfirmModal();
+    });
+
+    root.querySelector("[data-confirm-action]")?.addEventListener("click", runConfirmAction);
   }
 
   render();
