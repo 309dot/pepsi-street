@@ -3,6 +3,15 @@
   const api = window.PepsiStreetStore;
   const h = window.PepsiComponents.escapeHtml;
 
+  const PAGES = [
+    { id: "overview", label: "대시보드", title: "대시보드", desc: "매장 등록 현황과 마케팅 퍼포먼스를 확인합니다." },
+    { id: "stores", label: "매장관리", title: "매장관리", desc: "등록 완료·신청 매장을 관리합니다." },
+    { id: "maps", label: "지도 URL 관리", title: "지도 URL 관리", desc: "팹시스트릿 지도 URL을 관리합니다." },
+    { id: "images", label: "메인 이미지 관리", title: "메인 이미지 관리", desc: "메인 화면에 랜덤 노출할 이미지를 관리합니다." },
+  ];
+
+  let activePage = "overview";
+  let storeModalOpen = false;
   let activeStatus = "approved";
   let query = "";
   let editingId = null;
@@ -31,80 +40,152 @@
 
   function render() {
     const all = stores();
-    const approved = all.filter((store) => store.status === "approved");
-    const pending = all.filter((store) => store.status === "pending");
-    const edit = currentEditStore();
-    const mapLinks = api.getMapLinks();
-    const analytics = buildAnalytics(all, activePeriod);
+    const page = PAGES.find((item) => item.id === activePage) || PAGES[0];
 
     root.innerHTML = `
-      <header class="dash-header">
-        <div>
-          <h1>Pepsi Street Dashboard</h1>
-          <p>매장 등록 데이터와 지도 URL을 관리합니다.</p>
-        </div>
-        <div class="dash-actions">
-          <a class="dash-button" href="index.html" target="_blank" rel="noreferrer">사이트 보기</a>
-          <button class="dash-button danger" type="button" data-reset>초기 데이터 복원</button>
-        </div>
-      </header>
+      <div class="dash-layout">
+        ${sidebarMarkup(all)}
+        <main class="dash-content">
+          <header class="dash-header">
+            <div>
+              <h1>${h(page.title)}</h1>
+              <p>${h(page.desc)}</p>
+            </div>
+            <div class="dash-actions">
+              <a class="dash-button" href="index.html" target="_blank" rel="noreferrer">사이트 보기</a>
+              <button class="dash-button danger" type="button" data-reset>초기 데이터 복원</button>
+            </div>
+          </header>
+          ${pageMarkup(all)}
+        </main>
+      </div>
+      ${storeModalMarkup()}
+    `;
 
+    bind();
+  }
+
+  function sidebarMarkup(all) {
+    const pending = all.filter((store) => store.status === "pending").length;
+    return `
+      <aside class="dash-sidebar">
+        <div class="dash-brand">
+          <img src="assets/figma/pepsi-logo.svg" alt="Pepsi" />
+          <span>Pepsi Street</span>
+        </div>
+        <nav class="dash-nav" aria-label="대시보드 메뉴">
+          ${PAGES.map(
+            (item) => `
+              <button class="dash-nav-item ${item.id === activePage ? "is-active" : ""}" type="button" data-page="${item.id}">
+                <span>${h(item.label)}</span>
+                ${item.id === "stores" && pending ? `<em class="dash-nav-badge">${pending}</em>` : ""}
+              </button>
+            `,
+          ).join("")}
+        </nav>
+      </aside>
+    `;
+  }
+
+  function pageMarkup(all) {
+    if (activePage === "stores") return storesPageMarkup();
+    if (activePage === "maps") return mapsPageMarkup();
+    if (activePage === "images") return imagesPageMarkup();
+    return overviewPageMarkup(all);
+  }
+
+  function overviewPageMarkup(all) {
+    const approved = all.filter((store) => store.status === "approved");
+    const pending = all.filter((store) => store.status === "pending");
+    const analytics = buildAnalytics(all, activePeriod);
+    return `
       <section class="metric-row" aria-label="요약">
         <div class="metric"><span>등록 완료 매장</span><strong>${approved.length}</strong></div>
         <div class="metric"><span>등록 신청 매장</span><strong>${pending.length}</strong></div>
         <div class="metric"><span>카테고리</span><strong>${new Set(approved.map((store) => store.category)).size}</strong></div>
       </section>
-
       ${analyticsMarkup(analytics)}
+    `;
+  }
 
-      <div class="dashboard-grid">
-        <section class="dash-panel">
-          <div class="dash-panel-header">
-            <div class="dash-tabs" role="tablist" aria-label="매장 상태">
-              <button class="${activeStatus === "approved" ? "is-active" : ""}" type="button" data-tab="approved">등록 완료된 매장</button>
-              <button class="${activeStatus === "pending" ? "is-active" : ""}" type="button" data-tab="pending">등록 신청한 매장</button>
-            </div>
+  function storesPageMarkup() {
+    return `
+      <section class="dash-panel">
+        <div class="dash-panel-header">
+          <div class="dash-tabs" role="tablist" aria-label="매장 상태">
+            <button class="${activeStatus === "approved" ? "is-active" : ""}" type="button" data-tab="approved">등록 완료된 매장</button>
+            <button class="${activeStatus === "pending" ? "is-active" : ""}" type="button" data-tab="pending">등록 신청한 매장</button>
+          </div>
+          <div class="dash-panel-tools">
             <input class="dash-search" type="search" value="${h(query)}" placeholder="매장명, 카테고리, 주소 검색" data-search />
+            <button class="dash-button primary" type="button" data-open-store-modal>+ 매장 등록</button>
           </div>
-          <div class="store-table-wrap">
-            ${tableMarkup(visibleStores())}
+        </div>
+        <div class="store-table-wrap">
+          ${tableMarkup(visibleStores())}
+        </div>
+      </section>
+    `;
+  }
+
+  function mapsPageMarkup() {
+    const mapLinks = api.getMapLinks();
+    return `
+      <section class="dash-panel">
+        <form class="dash-form" data-map-form>
+          <h2>팹시스트릿 지도 URL 관리</h2>
+          ${field("naver", "네이버 지도 URL", mapLinks.naver, true)}
+          ${field("kakao", "카카오맵 URL", mapLinks.kakao, true)}
+          ${field("tmap", "티맵 URL", mapLinks.tmap, true)}
+          <button class="dash-button primary" type="submit">지도 URL 저장</button>
+        </form>
+      </section>
+    `;
+  }
+
+  function imagesPageMarkup() {
+    return heroImagesMarkup(api.getHeroImages());
+  }
+
+  function storeModalMarkup() {
+    if (!storeModalOpen) return "";
+    const edit = currentEditStore();
+    const title = edit ? "매장 수정" : activeStatus === "pending" ? "신청 매장 직접 등록" : "매장 등록";
+    return `
+      <div class="dash-modal-overlay" data-store-modal-overlay>
+        <div class="dash-modal" role="dialog" aria-modal="true" aria-label="${h(title)}">
+          <div class="dash-modal-header">
+            <h2>${title}</h2>
+            <button class="dash-modal-close" type="button" data-close-store-modal aria-label="닫기">×</button>
           </div>
-        </section>
-
-        <aside class="side-stack">
-          <section class="dash-panel">
-            <form class="dash-form" data-store-form>
-              <h2>${edit ? "매장 수정" : activeStatus === "pending" ? "신청 매장 직접 등록" : "완료 매장 직접 등록"}</h2>
-              ${field("name", "매장명", edit?.name || "", true)}
-              ${field("category", "카테고리", edit?.category || "", true)}
-              ${field("menuCategory", "메뉴 분류", edit?.menuCategory || api.getMenuCategory(edit || {}) || "", true)}
-              ${field("address", "주소", edit?.address || "", true)}
-              ${field("note", "비고", edit?.note || "", false, true)}
-              ${field("email", "이메일", edit?.email || "", false)}
-              ${field("phone", "전화번호", edit?.phone || "", false)}
-              <div class="form-actions">
-                <button class="dash-button primary" type="submit">${edit ? "수정 저장" : "매장 등록"}</button>
-                ${edit ? '<button class="dash-button" type="button" data-cancel-edit>취소</button>' : ""}
-              </div>
-            </form>
-          </section>
-
-          <section class="dash-panel">
-            <form class="dash-form" data-map-form>
-              <h2>팹시스트릿 지도 URL 관리</h2>
-              ${field("naver", "네이버 지도 URL", mapLinks.naver, true)}
-              ${field("kakao", "카카오맵 URL", mapLinks.kakao, true)}
-              ${field("tmap", "티맵 URL", mapLinks.tmap, true)}
-              <button class="dash-button primary" type="submit">지도 URL 저장</button>
-            </form>
-          </section>
-
-          ${heroImagesMarkup(api.getHeroImages())}
-        </aside>
+          <form class="dash-form" data-store-form>
+            ${field("name", "매장명", edit?.name || "", true)}
+            ${field("category", "카테고리", edit?.category || "", true)}
+            ${field("menuCategory", "메뉴 분류", edit?.menuCategory || api.getMenuCategory(edit || {}) || "", true)}
+            ${field("address", "주소", edit?.address || "", true)}
+            ${field("note", "비고", edit?.note || "", false, true)}
+            ${field("email", "이메일", edit?.email || "", false)}
+            ${field("phone", "전화번호", edit?.phone || "", false)}
+            <div class="form-actions">
+              <button class="dash-button" type="button" data-close-store-modal>취소</button>
+              <button class="dash-button primary" type="submit">${edit ? "수정 저장" : "매장 등록"}</button>
+            </div>
+          </form>
+        </div>
       </div>
     `;
+  }
 
-    bind();
+  function openStoreModal(id = null) {
+    editingId = id;
+    storeModalOpen = true;
+    render();
+  }
+
+  function closeStoreModal() {
+    editingId = null;
+    storeModalOpen = false;
+    render();
   }
 
   function buildAnalytics(allStores, days) {
@@ -442,6 +523,26 @@
   }
 
   function bind() {
+    root.querySelectorAll("[data-page]").forEach((button) => {
+      button.addEventListener("click", () => {
+        if (activePage === button.dataset.page) return;
+        activePage = button.dataset.page;
+        editingId = null;
+        storeModalOpen = false;
+        render();
+      });
+    });
+
+    root.querySelector("[data-open-store-modal]")?.addEventListener("click", () => openStoreModal(null));
+
+    root.querySelectorAll("[data-close-store-modal]").forEach((button) => {
+      button.addEventListener("click", closeStoreModal);
+    });
+
+    root.querySelector("[data-store-modal-overlay]")?.addEventListener("click", (event) => {
+      if (event.target === event.currentTarget) closeStoreModal();
+    });
+
     root.querySelectorAll("[data-tab]").forEach((button) => {
       button.addEventListener("click", () => {
         activeStatus = button.dataset.tab;
@@ -485,6 +586,7 @@
         phone: form.get("phone"),
       });
       editingId = null;
+      storeModalOpen = false;
       render();
     });
 
@@ -521,10 +623,7 @@
     });
 
     root.querySelectorAll("[data-edit]").forEach((button) => {
-      button.addEventListener("click", () => {
-        editingId = button.dataset.edit;
-        render();
-      });
+      button.addEventListener("click", () => openStoreModal(button.dataset.edit));
     });
 
     root.querySelectorAll("[data-delete]").forEach((button) => {
@@ -533,11 +632,6 @@
         editingId = null;
         render();
       });
-    });
-
-    root.querySelector("[data-cancel-edit]")?.addEventListener("click", () => {
-      editingId = null;
-      render();
     });
 
     root.querySelector("[data-reset]")?.addEventListener("click", () => {
