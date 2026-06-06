@@ -42,6 +42,7 @@
   let editingId = null;
   let activePeriod = 28;
   let confirmAction = null;
+  let fabObserver = null;
 
   function stores() {
     return api.getAllStores();
@@ -204,7 +205,7 @@
               <h2>매장 데이터 관리</h2>
               <p>${activeStatus === "approved" ? "등록 완료된 매장을 유지보수합니다." : "신청 매장을 검토하고 승인합니다."}</p>
             </div>
-            <button class="dash-button primary" type="button" data-open-store-modal>${icon("plus")}매장 등록</button>
+            <button class="dash-button primary" type="button" data-open-store-modal data-open-store-anchor>${icon("plus")}매장 등록</button>
           </div>
           <div class="dash-toolbar-row">
             <div class="dash-tabs" role="tablist" aria-label="매장 상태">
@@ -238,7 +239,7 @@
           ${tableMarkup(items)}
         </div>
       </section>
-      <button class="dash-fab" type="button" data-open-store-modal aria-label="매장 등록">${icon("plus")}</button>
+      <button class="dash-fab" type="button" data-open-store-modal data-open-store-fab aria-label="매장 등록">${icon("plus")}</button>
     `;
   }
 
@@ -745,7 +746,6 @@
         <thead>
           <tr>
             <th>매장</th>
-            <th>카테고리</th>
             <th>메뉴 분류</th>
             <th>주소</th>
             <th>비고</th>
@@ -763,7 +763,6 @@
                     </div>
                     <span>${h(store.email || store.phone || api.getDistrict(store.address))}</span>
                   </td>
-                  <td><span class="store-badge">${h(store.category)}</span></td>
                   <td><span class="store-badge subtle">${h(api.getMenuCategory(store))}</span></td>
                   <td class="store-address">${h(store.address)}</td>
                   <td class="store-note">${h(store.note || "-")}</td>
@@ -784,6 +783,11 @@
   }
 
   function bind() {
+    if (fabObserver) {
+      fabObserver.disconnect();
+      fabObserver = null;
+    }
+
     root.querySelectorAll("[data-page]").forEach((button) => {
       button.addEventListener("click", () => {
         if (activePage === button.dataset.page) return;
@@ -971,6 +975,22 @@
     });
 
     root.querySelector("[data-confirm-action]")?.addEventListener("click", runConfirmAction);
+
+    const storeAnchor = root.querySelector("[data-open-store-anchor]");
+    const fabButton = root.querySelector("[data-open-store-fab]");
+    if (storeAnchor && fabButton && "IntersectionObserver" in window) {
+      fabObserver = new IntersectionObserver(
+        ([entry]) => {
+          fabButton.classList.toggle("is-visible", !entry.isIntersecting);
+        },
+        {
+          threshold: 0.85,
+        },
+      );
+      fabObserver.observe(storeAnchor);
+    } else if (fabButton) {
+      fabButton.classList.add("is-visible");
+    }
   }
 
   render();

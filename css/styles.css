@@ -2432,19 +2432,44 @@ body[data-page="dashboard"] {
 
 .store-table th:nth-child(1),
 .store-table td:nth-child(1) {
-  width: 18%;
+  width: 20%;
 }
 
 .store-table th:nth-child(2),
 .store-table td:nth-child(2),
 .store-table th:nth-child(3),
 .store-table td:nth-child(3) {
-  width: 12%;
+  width: 16%;
 }
 
-.store-table th:nth-child(6),
-.store-table td:nth-child(6) {
+.store-table th:nth-child(5),
+.store-table td:nth-child(5) {
   width: 98px;
+}
+
+.dash-fab {
+  right: 18px;
+  bottom: 18px;
+  width: 48px;
+  height: 48px;
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  pointer-events: none;
+  transition:
+    opacity 180ms ease,
+    transform 240ms ease,
+    box-shadow 240ms ease;
+}
+
+.dash-fab.is-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  pointer-events: auto;
+}
+
+.dash-fab .ui-icon {
+  width: 20px;
+  height: 20px;
 }
 
 .store-name-cell span {
