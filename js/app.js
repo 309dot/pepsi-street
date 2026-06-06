@@ -274,7 +274,6 @@
     const filterRoot = app.querySelector(".sticky-filter");
     const listRoot = app.querySelector("[data-store-scroll]");
     const listScrollTop = keepListScroll ? listRoot?.scrollTop || 0 : 0;
-    const tabsScrollLeft = app.querySelector(".ps-tabs")?.scrollLeft || 0;
 
     if (filterRoot) {
       filterRoot.innerHTML = `
@@ -282,7 +281,11 @@
         ${components.tabs({ items: filters, active: activeFilter, showIcons: mode !== "district" })}
       `;
       const tabsRoot = filterRoot.querySelector(".ps-tabs");
-      if (tabsRoot) tabsRoot.scrollLeft = tabsScrollLeft;
+      const activeTab = tabsRoot?.querySelector(".is-active");
+      if (tabsRoot && activeTab) {
+        const padLeft = parseFloat(getComputedStyle(tabsRoot).paddingLeft) || 0;
+        tabsRoot.scrollLeft = Math.max(0, activeTab.offsetLeft - padLeft);
+      }
     }
     if (listRoot) {
       const stores = filteredStores();
