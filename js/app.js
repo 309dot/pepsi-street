@@ -42,10 +42,24 @@
     return stores.filter((store) => storeApi.getDistrict(store.address) === activeFilter);
   }
 
+  function heroBackgroundAttr(src) {
+    return src ? ` style="background-image:url('${src.replace(/'/g, "\\'")}')"` : "";
+  }
+
+  function pickHeroBackgrounds() {
+    const images = (storeApi.getHeroImages?.() || []).filter(Boolean);
+    if (!images.length) return ["", ""];
+    const shuffled = images.slice().sort(() => Math.random() - 0.5);
+    const a = shuffled[0];
+    const b = shuffled[1] || shuffled[0];
+    return [heroBackgroundAttr(a), heroBackgroundAttr(b)];
+  }
+
   function render() {
     const stores = approvedStores();
     const filters = filterItems(stores);
     if (!filters.includes(activeFilter)) activeFilter = "전체";
+    const [heroA, heroB] = pickHeroBackgrounds();
 
     app.innerHTML = `
       ${components.intro()}
@@ -62,8 +76,8 @@
                   <span class="hero-line">특별함을 찾는 특별한 사람들을</span>
                   <span class="hero-line">위해 공개합니다!</span>
                 </h1>
-                <span class="hero-img hero-img-a" aria-hidden="true"></span>
-                <span class="hero-img hero-img-b" aria-hidden="true"></span>
+                <span class="hero-img hero-img-a" aria-hidden="true"${heroA}></span>
+                <span class="hero-img hero-img-b" aria-hidden="true"${heroB}></span>
               </div>
               <p>펩시제로라임을 최상의 페어링으로 즐길 수 있는 전국의 감도 높은 F&amp;B 매장 큐레이션 캠페인</p>
             </div>
@@ -260,12 +274,15 @@
     const filterRoot = app.querySelector(".sticky-filter");
     const listRoot = app.querySelector("[data-store-scroll]");
     const listScrollTop = keepListScroll ? listRoot?.scrollTop || 0 : 0;
+    const tabsScrollLeft = app.querySelector(".ps-tabs")?.scrollLeft || 0;
 
     if (filterRoot) {
       filterRoot.innerHTML = `
         ${components.toggle({ mode })}
         ${components.tabs({ items: filters, active: activeFilter, showIcons: mode !== "district" })}
       `;
+      const tabsRoot = filterRoot.querySelector(".ps-tabs");
+      if (tabsRoot) tabsRoot.scrollLeft = tabsScrollLeft;
     }
     if (listRoot) {
       const stores = filteredStores();

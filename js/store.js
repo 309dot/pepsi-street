@@ -1,6 +1,8 @@
 (function () {
   const STORE_KEY = "pepsi-street:stores:v1";
   const MAP_KEY = "pepsi-street:map-links:v1";
+  const HERO_IMAGE_KEY = "pepsi-street:hero-images:v1";
+  const HERO_IMAGE_LIMIT = 6;
   const SEED_VERSION_KEY = "pepsi-street:stores:seed-version";
 
   function clone(value) {
@@ -151,6 +153,23 @@
     return next;
   }
 
+  function getHeroImages() {
+    const raw = localStorage.getItem(HERO_IMAGE_KEY);
+    if (!raw) return [];
+    try {
+      const list = JSON.parse(raw);
+      return Array.isArray(list) ? list.filter(Boolean).slice(0, HERO_IMAGE_LIMIT) : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function saveHeroImages(images) {
+    const next = (Array.isArray(images) ? images : []).filter(Boolean).slice(0, HERO_IMAGE_LIMIT);
+    localStorage.setItem(HERO_IMAGE_KEY, JSON.stringify(next));
+    return next;
+  }
+
   window.PepsiStreetStore = {
     getAllStores,
     saveStores,
@@ -161,6 +180,9 @@
     resetStores,
     getMapLinks,
     saveMapLinks,
+    getHeroImages,
+    saveHeroImages,
+    heroImageLimit: HERO_IMAGE_LIMIT,
     getDistrict,
     getMenuCategory,
   };

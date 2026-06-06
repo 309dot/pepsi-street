@@ -98,6 +98,8 @@
               <button class="dash-button primary" type="submit">지도 URL 저장</button>
             </form>
           </section>
+
+          ${heroImagesMarkup(api.getHeroImages())}
         </aside>
       </div>
     `;
@@ -302,6 +304,83 @@
     `;
   }
 
+  function heroImagesMarkup(images) {
+    const limit = api.heroImageLimit;
+    const remaining = Math.max(0, limit - images.length);
+    const thumbs = images
+      .map(
+        (src, index) => `
+          <div class="hero-image-thumb">
+            <img src="${src}" alt="메인 이미지 ${index + 1}" />
+            <button class="hero-image-remove" type="button" data-hero-remove="${index}" aria-label="이미지 삭제">×</button>
+          </div>
+        `,
+      )
+      .join("");
+
+    return `
+      <section class="dash-panel">
+        <div class="dash-form">
+          <h2>메인 이미지 관리</h2>
+          <p class="hero-image-hint">최대 ${limit}개까지 첨부할 수 있으며, 메인 화면에 랜덤으로 노출됩니다. (현재 ${images.length}/${limit})</p>
+          <div class="hero-image-grid">
+            ${thumbs || `<p class="analytics-empty">등록된 이미지가 없습니다.</p>`}
+          </div>
+          <label class="dash-button primary hero-image-add ${remaining ? "" : "is-disabled"}">
+            이미지 추가
+            <input type="file" accept="image/*" multiple data-hero-input ${remaining ? "" : "disabled"} hidden />
+          </label>
+        </div>
+      </section>
+    `;
+  }
+
+  function compressImage(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = reject;
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = reject;
+        img.onload = () => {
+          const maxEdge = 720;
+          const scale = Math.min(1, maxEdge / Math.max(img.width, img.height));
+          const width = Math.round(img.width * scale);
+          const height = Math.round(img.height * scale);
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL("image/jpeg", 0.82));
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function addHeroImages(fileList) {
+    const limit = api.heroImageLimit;
+    const current = api.getHeroImages();
+    const room = limit - current.length;
+    if (room <= 0) return;
+    const files = Array.from(fileList).filter((file) => file.type.startsWith("image/")).slice(0, room);
+    const encoded = [];
+    for (const file of files) {
+      try {
+        encoded.push(await compressImage(file));
+      } catch (error) {
+        /* skip unreadable file */
+      }
+    }
+    try {
+      api.saveHeroImages([...current, ...encoded]);
+    } catch (error) {
+      window.alert("이미지 저장 용량을 초과했습니다. 기존 이미지를 삭제한 뒤 다시 시도해 주세요.");
+    }
+    render();
+  }
+
   function field(name, label, value, required = false, textarea = false) {
     const attrs = `name="${h(name)}" ${required ? "required" : ""}`;
     return `
@@ -418,6 +497,20 @@
         tmap: form.get("tmap"),
       });
       render();
+    });
+
+    root.querySelector("[data-hero-input]")?.addEventListener("change", (event) => {
+      const input = event.currentTarget;
+      if (input.files?.length) addHeroImages(input.files);
+      input.value = "";
+    });
+
+    root.querySelectorAll("[data-hero-remove]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const next = api.getHeroImages().filter((_, index) => index !== Number(button.dataset.heroRemove));
+        api.saveHeroImages(next);
+        render();
+      });
     });
 
     root.querySelectorAll("[data-approve]").forEach((button) => {

@@ -64,7 +64,7 @@
         () => `
           <span class="rolling-unit">
             <img class="rolling-star" src="${assets.star}" alt="" />
-            <img class="rolling-word" src="${assets.rollingText}" alt="" />
+            <span class="rolling-word">PEPSI-스트릿</span>
           </span>
         `,
       )
