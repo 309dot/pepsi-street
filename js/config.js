@@ -7,7 +7,7 @@
   //   - SUPABASE_URL      : "Project URL"
   //   - SUPABASE_ANON_KEY : "Project API keys" 의 anon public 키
   window.PEPSI_CONFIG = {
-    SUPABASE_URL: "",
-    SUPABASE_ANON_KEY: "",
+    SUPABASE_URL: "https://uewkfzwbkuklzgcbcizu.supabase.co",
+    SUPABASE_ANON_KEY: "sb_publishable_-e7Lv6UffE9uXEJytWg1jA_8ZBTZkFL",
   };
 })();
