@@ -183,6 +183,31 @@
     return next;
   }
 
+  const MIGRATED_KEY = "pepsi-street:cloud-migrated:v1";
+
+  // 기기별 1회: 클라우드로 전환되기 전 로컬에 직접 추가한 매장이 덮어써져 사라지지 않도록
+  // 클라우드로 먼저 올린다(시드 매장은 제외, id가 store- 로 시작하는 사용자 추가분만).
+  async function migrateLocalAdditions() {
+    if (localStorage.getItem(MIGRATED_KEY)) return;
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) {
+      let localUser = [];
+      try {
+        localUser = JSON.parse(raw).filter((store) => String(store.id || "").startsWith("store-"));
+      } catch (error) {
+        localUser = [];
+      }
+      for (const store of localUser) {
+        try {
+          await window.PepsiCloud.pushStore(store);
+        } catch (error) {
+          console.warn("[PepsiStreet] 로컬 매장 업로드 실패:", store?.name, error);
+        }
+      }
+    }
+    localStorage.setItem(MIGRATED_KEY, "true");
+  }
+
   // 클라우드(공용 DB)에서 최신 데이터를 받아 로컬 캐시를 갱신한다.
   async function refreshFromCloud() {
     if (!window.PepsiCloud?.enabled) return false;
@@ -191,6 +216,7 @@
         clone(window.PEPSI_STREET_SEED || []),
         { ...window.PEPSI_DEFAULT_MAP_LINKS }
       );
+      await migrateLocalAdditions();
       const data = await window.PepsiCloud.fetchAll();
       localStorage.setItem(STORE_KEY, JSON.stringify(dedupeStores(data.stores)));
       localStorage.setItem(SEED_VERSION_KEY, window.PEPSI_STREET_SEED_VERSION || "legacy");
