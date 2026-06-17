@@ -994,4 +994,10 @@
   }
 
   render();
+
+  if (api.cloudEnabled()) {
+    window.addEventListener("pepsi-street:synced", () => render());
+    api.subscribeCloud(() => api.refreshFromCloud());
+    api.refreshFromCloud();
+  }
 })();

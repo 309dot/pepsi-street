@@ -373,4 +373,10 @@
   }
 
   render();
+
+  if (storeApi.cloudEnabled()) {
+    // 공용 DB에서 최신 매장 데이터를 받아 리스트만 조용히 갱신(스크롤/인트로 유지).
+    window.addEventListener("pepsi-street:synced", () => updateStoreArea());
+    storeApi.refreshFromCloud();
+  }
 })();

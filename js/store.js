@@ -13,6 +13,14 @@
     return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
   }
 
+  // 클라우드가 설정된 경우에만 비동기로 원격 반영(실패해도 로컬 동작은 유지).
+  function cloudPush(run) {
+    if (!window.PepsiCloud?.enabled) return;
+    Promise.resolve()
+      .then(run)
+      .catch((error) => console.warn("[PepsiStreet] 클라우드 저장 실패:", error));
+  }
+
   function normalizeKey(store) {
     return [store.name, store.address]
       .map((value) => String(value || "").replace(/\s+/g, "").toLowerCase())
@@ -88,6 +96,7 @@
     if (index >= 0) stores[index] = { ...stores[index], ...next };
     else stores.unshift(next);
     saveStores(stores);
+    cloudPush(() => window.PepsiCloud.pushStore(index >= 0 ? stores[index] : next));
     return next;
   }
 
@@ -127,11 +136,13 @@
     store.status = "approved";
     store.approvedAt = new Date().toISOString();
     saveStores(stores);
+    cloudPush(() => window.PepsiCloud.pushStore(store));
     return store;
   }
 
   function removeStore(id) {
     saveStores(getAllStores().filter((store) => store.id !== id));
+    cloudPush(() => window.PepsiCloud.deleteStore(id));
   }
 
   function resetStores() {
@@ -150,6 +161,7 @@
       ...links,
     };
     localStorage.setItem(MAP_KEY, JSON.stringify(next));
+    cloudPush(() => window.PepsiCloud.saveMapLinks(next));
     return next;
   }
 
@@ -167,7 +179,39 @@
   function saveHeroImages(images) {
     const next = (Array.isArray(images) ? images : []).filter(Boolean).slice(0, HERO_IMAGE_LIMIT);
     localStorage.setItem(HERO_IMAGE_KEY, JSON.stringify(next));
+    cloudPush(() => window.PepsiCloud.saveHeroImages(next));
     return next;
+  }
+
+  // 클라우드(공용 DB)에서 최신 데이터를 받아 로컬 캐시를 갱신한다.
+  async function refreshFromCloud() {
+    if (!window.PepsiCloud?.enabled) return false;
+    try {
+      await window.PepsiCloud.seedIfEmpty(
+        clone(window.PEPSI_STREET_SEED || []),
+        { ...window.PEPSI_DEFAULT_MAP_LINKS }
+      );
+      const data = await window.PepsiCloud.fetchAll();
+      localStorage.setItem(STORE_KEY, JSON.stringify(dedupeStores(data.stores)));
+      localStorage.setItem(SEED_VERSION_KEY, window.PEPSI_STREET_SEED_VERSION || "legacy");
+      if (data.mapLinks) {
+        localStorage.setItem(MAP_KEY, JSON.stringify({ ...window.PEPSI_DEFAULT_MAP_LINKS, ...data.mapLinks }));
+      }
+      localStorage.setItem(HERO_IMAGE_KEY, JSON.stringify(data.heroImages.slice(0, HERO_IMAGE_LIMIT)));
+      window.dispatchEvent(new CustomEvent("pepsi-street:synced"));
+      return true;
+    } catch (error) {
+      console.warn("[PepsiStreet] 클라우드 동기화 실패, 로컬 캐시를 사용합니다:", error);
+      return false;
+    }
+  }
+
+  function cloudEnabled() {
+    return Boolean(window.PepsiCloud?.enabled);
+  }
+
+  function subscribeCloud(onChange) {
+    window.PepsiCloud?.subscribe?.(onChange);
   }
 
   window.PepsiStreetStore = {
@@ -183,6 +227,9 @@
     getHeroImages,
     saveHeroImages,
     heroImageLimit: HERO_IMAGE_LIMIT,
+    refreshFromCloud,
+    cloudEnabled,
+    subscribeCloud,
     getDistrict,
     getMenuCategory,
   };
